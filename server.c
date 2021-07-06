@@ -17,6 +17,7 @@ int main(int argc, char *argv[])
 	socklen_t clnt_addr_size;
 
 	char message[] = "Hello World!";
+  char buf[256] = {0, };
 
 	if (argc != 2)
 	{
@@ -43,6 +44,9 @@ int main(int argc, char *argv[])
 	clnt_sock = accept(serv_sock, (struct sockaddr *)&clnt_addr, &clnt_addr_size);
 	if (clnt_sock == -1)
 		error_handling("accept() error");
+
+  read(clnt_sock, buf, sizeof(buf));
+  printf("Message from client: %s\n", buf);
 
 	write(clnt_sock, message, sizeof(message));
 	close(clnt_sock);
