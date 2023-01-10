@@ -14,4 +14,4 @@ client: client.o
 	@echo "CC <= $<"
 
 clean:
-	$(RM) $(OBJS) 
+	$(RM) server client $(OBJS) 
