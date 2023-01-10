@@ -4,34 +4,98 @@
 #include <unistd.h>
 #include <arpa/inet.h>
 #include <sys/socket.h>
+#include <getopt.h>
+#include <stdint.h>
+
 void error_handling(char *message);
+
+void usage(const char *pname)
+{
+  printf(">> Usage: %s [options]\n", pname);
+  printf("Options\n");
+  printf("  -a, --addr       Server's address\n");
+  printf("  -p, --port       Server's port\n");
+  exit(0);
+}
 
 int main(int argc, char *argv[])
 {
 	int sock;
 	struct sockaddr_in serv_addr;
-  char *msg = "hello, server!\n";
+  char *msg = "Hello, World!\n";
 	char message[30];
-	int str_len;
+	int c, port, tmp, str_len;
+  uint8_t *pname, *addr;
+  uint8_t eflag;
 
-	if (argc != 3)
-	{
-		printf("Usage: %s <IP> <port>\n", argv[0]);
-		exit(1);
-	}
+  pname = argv[0];
+  addr = NULL;
+  port = -1;
+  eflag = 0;
+
+  while (1)
+  {
+    int option_index = 0;
+    static struct option long_options[] = {
+      {"addr", required_argument, 0, 'a'},
+      {"port", required_argument, 0, 'p'},
+      {0, 0, 0, 0}
+    };
+
+    const char *opt = "a:p:0";
+
+    c = getopt_long(argc, argv, opt, long_options, &option_index);
+
+    if (c == -1)
+      break;
+
+    switch (c)
+    {
+      case 'a':
+        tmp = strlen(optarg);
+        addr = (uint8_t *)malloc(tmp);
+        memcpy(addr, optarg, tmp);
+        break;
+
+      case 'p':
+        port = atoi(optarg);
+        break;
+
+      default:
+        usage(pname);
+    }
+  }
+
+  if (!addr)
+  {
+    printf("[*] Please specify the server's address to connect\n");
+    eflag = 1;
+  }
+
+  if (port < 0)
+  {
+    printf("[*] Please specify the server's port to connect\n");
+    eflag = 1;
+  }
+
+  if (eflag)
+  {
+    usage(pname);
+    exit(0);
+  }
 
 	sock = socket(PF_INET, SOCK_STREAM, 0);
 	if (sock == -1)
 		error_handling("socket() error");
 	memset(&serv_addr, 0, sizeof(serv_addr));
 	serv_addr.sin_family = AF_INET;
-	serv_addr.sin_addr.s_addr = inet_addr(argv[1]);
-	serv_addr.sin_port = htons(atoi(argv[2]));
+	serv_addr.sin_addr.s_addr = inet_addr(addr);
+	serv_addr.sin_port = htons(port);
 
 	if (connect(sock, (struct sockaddr*)&serv_addr, sizeof(serv_addr)) == -1)
 		error_handling("connect() error");
 	
-  printf("connect() success\n");
+  printf("[*] Connected to %s:%d\n", addr, port);
   str_len = write(sock, msg, strlen(msg));
 
   if (str_len == -1)
@@ -42,7 +106,7 @@ int main(int argc, char *argv[])
 	if (str_len == -1)
 		error_handling("read() error");
 	
-	printf("Message from server: %s \n", message);
+	printf("[*] Message from server: %s \n", message);
 	close(sock);
 	return 0;
 }
