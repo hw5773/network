@@ -23,7 +23,7 @@ int main(int argc, char *argv[])
 	int sock;
 	struct sockaddr_in serv_addr;
   char *msg = "Hello, World!\n";
-	char message[30];
+	char message[30] = {0, };
 	int c, port, tmp, str_len;
   uint8_t *pname, *addr;
   uint8_t eflag;
